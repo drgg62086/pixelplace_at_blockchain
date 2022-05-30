@@ -291,10 +291,10 @@ $(function() {
 		allowEmpty:true,
 		showAlpha: true,
 		showPalette: true,
-		showPaletteOnly : true , 
-		togglePaletteOnly: true,
-		togglePaletteMoreText: 'more',
-		togglePaletteLessText: 'less',
+		// showPaletteOnly : true , 
+		// togglePaletteOnly: true,
+		// togglePaletteMoreText: 'more',
+		// togglePaletteLessText: 'less',
 		
 		showSelectionPalette: true, 
 		maxSelectionSize: 32	,
@@ -662,8 +662,7 @@ $(function() {
 	
 	
 	var query_start_height=0,query_data_offset=0;
-	var is_searching=0;
-	
+	var is_searching=0,loop_count=0;
 	function query_history_start(){
 		selected_blockchain=$('#select_blockchain option:selected').val();
 		query_target_address=$('#target_address').val();
@@ -679,13 +678,16 @@ $(function() {
 		
 		query_history_loop();
 	}
-	function query_history_end(){
+	function query_history_end(msg){
 		$('#query_data_start').val('search');
-		$('#search_tips').text('finished!');
+		if(!msg) msg='finished!';
+		$('#search_tips').text(msg);
 		$('#query_data_stop').hide();
 		query_data_offset=0;
 		is_searching=0;
+		loop_count=0;
 	};
+	var searched_block=0;
 	function handle_transaction_data_terra_classic(res){
 		$.each(res.txs,function(k,v){
 			// check block height
@@ -775,7 +777,7 @@ $(function() {
 	}
 	 
 	function handle_transaction_data_terra_v2(res){
-		$.each(res.txs,function(k,v){
+		$.each(res.tx_responses,function(k,v){
 			// console.log(5555,v);
 			// check block height
 			var block_height=v.height;
@@ -862,15 +864,20 @@ $(function() {
 		query_data_offset=res.next;
 	}
 	
-	function query_history_loop(){
+	
+	function query_history_loop(msg){
 		// console.log(5555,'is_searching:',is_searching);
 		if(!is_searching){
-			query_history_end();
+			query_history_end(msg);
 			return '';
 		}
 		
+		if(loop_count>0 && searched_block==0){
+			query_history_end(msg);
+			return '';
+		}
 		
-		
+		loop_count++;
 		setTimeout(function(){
 			
 			var query_data_url='';
@@ -888,12 +895,18 @@ $(function() {
 					break;
 				}
 				case 'terra_2':{
-					query_data_url='https://phoenix-fcd.terra.dev/v1/txs';
+					// query_data_url='https://phoenix-fcd.terra.dev/v1/txs';
+					query_data_url='https://phoenix-lcd.terra.dev/cosmos/tx/v1beta1/txs';
+					
+					query_target_address='terra13s4gwzxv6dycfctvddfuy6r3zm7d6zklynzzj5';// test
 					query_param={
 						// chainId:'', //
-						account:query_target_address,// 
-						limit:'100',
-						offset:query_data_offset
+						events:'coin_received.receiver=\''+query_target_address+'\'',//query_target_address',// 
+						// "pagination.limit":'100',
+						// 'pagination.offset':query_data_offset,
+						// 'pagination.count_total':true
+						limit:'10',
+						// offset:query_data_offset
 					};
 					break;
 				}
@@ -905,8 +918,7 @@ $(function() {
 			})
 			.success(function(res){
 				// console.log(555,res);
-				var searched_block=0;
-				var max_height=0;
+			
 				
 				//handle transaction data
 				switch(selected_blockchain){
@@ -932,9 +944,7 @@ $(function() {
 			})
 			.error(function(e){
 				is_searching=0;
-				
-				$('#search_tips').text('search error:'+JSON.stringify(e));
-				query_history_loop();
+				query_history_loop('search error:'+JSON.stringify(e));
 			});
 			
 			

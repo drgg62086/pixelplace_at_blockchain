@@ -26,6 +26,7 @@ a:hover {  text-decoration: underline;}
 }
 
 .query_data_form{
+	width:360px;
 	top:0;
 	left:0;
 }
@@ -122,12 +123,19 @@ a:hover {  text-decoration: underline;}
 }
 
 #color_input_box{
-	left:600px;
+	right:0;
 	bottom:0;
+	padding: 30px 10px 30px 20px;
 }
 #color_input_box .sp-initial-disabled .sp-input-container{
 	float:left;
 	width:103px;
+}
+#color_input_box .sp-container {
+	width: 195px;
+}
+#color_input_box .sp-palette-container {
+    width: 174px;
 }
 .submit_box{
 	display:none;
